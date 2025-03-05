@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mission Jarewadi: Data Transformation Tool</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <style>
+    body {
+      background: #f8f9fa;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 600px;
+      margin-top: 80px;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .spinner-border {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="text-center mb-4">Mission Jarewadi: Data Transformation Tool</h2>
+    
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert alert-warning" role="alert" id="flash-message">
+          {% for message in messages %}
+            {{ message }}<br>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    
+    <!-- Form with hidden iframe target -->
+    <form id="uploadForm" method="POST" enctype="multipart/form-data" target="download_iframe">
+      <div class="form-group">
+        <label for="file">Upload Raw Excel File</label>
+        <input type="file" class="form-control-file" id="file" name="file" accept=".xlsx" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="uploadButton">Upload</button>
+    </form>
+    
+    <!-- Loader spinner -->
+    <div class="text-center mt-3">
+      <div class="spinner-border" role="status" id="loader">
+        <span class="sr-only">Processing...</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Hidden iframe to capture the response -->
+  <iframe name="download_iframe" style="display:none;"></iframe>
+  
+  <script>
+    // Poll for the download cookie.
+    function checkDownloadCookie() {
+      if (document.cookie.indexOf("fileDownload=true") !== -1) {
+        // Remove the cookie.
+        document.cookie = "fileDownload=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('uploadButton').disabled = false;
+        // Clear the file input value to reset the file picker.
+        document.getElementById('file').value = "";
+        var flashDiv = document.getElementById('flash-message');
+        if (flashDiv) {
+          flashDiv.innerHTML = "File transformed and downloaded successfully!";
+          flashDiv.className = "alert alert-success";
+          flashDiv.style.display = 'block';
+        } else {
+          var newFlash = document.createElement('div');
+          newFlash.className = 'alert alert-success';
+          newFlash.id = 'flash-message';
+          newFlash.innerHTML = "File transformed and downloaded successfully!";
+          document.querySelector('.container').insertBefore(newFlash, document.querySelector('.container').firstChild);
+        }
+        clearInterval(cookieInterval);
+      }
+    }
+    
+    var cookieInterval;
+    
+    document.getElementById('uploadForm').addEventListener('submit', function(){
+      document.getElementById('uploadButton').disabled = true;
+      document.getElementById('loader').style.display = 'inline-block';
+      // Start polling every 500ms for the cookie.
+      cookieInterval = setInterval(checkDownloadCookie, 500);
+    });
+    
+    // Auto-hide flash messages after 5 seconds.
+    setTimeout(function(){
+      var flashDiv = document.getElementById('flash-message');
+      if (flashDiv) {
+           flashDiv.style.display = 'none';
+      }
+    }, 5000);
+  </script>
+</body>
+</html>
